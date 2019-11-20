@@ -21,6 +21,7 @@ type Logger interface {
 	SetPid(pid int)
 	ReadLog(offset int64, length int64) (string, error)
 	ReadTailLog(offset int64, length int64) (string, int64, bool, error)
+
 	ClearCurLogFile() error
 	ClearAllLogFile() error
 }

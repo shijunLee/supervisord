@@ -1,0 +1,84 @@
+
+syntax = "proto3";
+package message;
+
+// message id 1
+message HeartbeatAck{
+    int32 id=1;
+}
+
+// message id 2
+message HeartbeatReq{
+  int32 id=2;
+}
+
+// message login id 3
+
+message InstanceLoginReq{
+    string appId = 1;
+    string localIp = 2;
+    string accessToken = 3;    
+}
+// message login id 4
+message InstanceLoginAck{
+    bool result = 1; 
+}
+
+// message start app 5
+message StartAppReq{
+    string applicationName = 1; 
+}
+
+// message start app 6
+message StartAppAck{
+    bool result = 1;
+    string message = 2;
+}
+
+// message start app 7
+message StopAppReq{
+    string applicationName = 1;
+}
+
+// message stop app 8
+message StopAppAck{
+    bool result = 1;
+    string message = 2;
+}
+
+//message get log request 9
+message GetLogReq{
+    string applicationName =1;
+}
+
+// message get log result 10
+message GetLogAck{
+    string message =1;
+    string errorMessage=2;
+}
+
+
+// message start startPrograms 11
+
+message startProgramesReq{
+    repeated string applicationNames = 1;
+}
+
+
+// message start startPrograms 12
+message startProgramsAck{
+    string message = 2;
+    bool status =1;
+}
+
+
+// message start startPrograms 13
+message stopProgramesReq{
+    repeated string applicationNames = 1;
+}
+
+// message start startPrograms 14
+message stopProgramsAck{
+    string message = 2;
+    bool status =1;
+}
