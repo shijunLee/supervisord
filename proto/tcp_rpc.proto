@@ -16,8 +16,9 @@ message HeartbeatReq{
 
 message InstanceLoginReq{
     string appId = 1;
-    string localIp = 2;
-    string accessToken = 3;    
+    string instanceID = 2;
+    string groupID = 3;
+    string accessToken = 4;
 }
 // message login id 4
 message InstanceLoginAck{

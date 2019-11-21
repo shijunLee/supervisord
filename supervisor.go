@@ -86,6 +86,8 @@ func (s *Supervisor) GetConfig() *config.Config {
 	return s.config
 }
 
+
+
 func (s *Supervisor) GetVersion(r *http.Request, args *struct{}, reply *struct{ Version string }) error {
 	reply.Version = SUPERVISOR_VERSION
 	return nil
@@ -406,6 +408,7 @@ func (s *Supervisor) Reload() (error, []string, []string, []string) {
 		s.startEventListeners()
 		s.createPrograms(prevPrograms)
 		s.startHttpServer()
+		s.startTcpService()
 		s.startAutoStartPrograms()
 	}
 	removedPrograms := util.Sub(prevPrograms, loaded_programs)
@@ -460,7 +463,16 @@ func (s *Supervisor) startEventListeners() {
 		time.Sleep(1 * time.Second)
 	}
 }
-
+func (s *Supervisor)startTcpService()  {
+	addr := "127.0.0.1"
+	port := "59999"
+	appId := "app-test123123123"
+	groupId :="group-test123123123"
+	instanceId :="i-test123123123"
+	supervisorTcp:=&SupervisorTcp{supervisor:s,ipAddress:addr,port:port,appID:appId,instanceID:instanceId,accessToken:"test",groupID:groupId }
+	go supervisorTcp.CreateSocket()
+	//fmt.Println(err)
+}
 func (s *Supervisor) startHttpServer() {
 	httpServerConfig, ok := s.config.GetInetHttpServer()
 	s.xmlRPC.Stop()
