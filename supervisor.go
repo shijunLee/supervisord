@@ -466,9 +466,9 @@ func (s *Supervisor) startEventListeners() {
 func (s *Supervisor)startTcpService()  {
 	addr := "127.0.0.1"
 	port := "59999"
-	appId := "app-test123123123"
-	groupId :="group-test123123123"
-	instanceId :="i-test123123123"
+	appId := "app-test123123124"
+	groupId :="group-test123123124"
+	instanceId :="i-test123123124"
 	supervisorTcp:=&SupervisorTcp{supervisor:s,ipAddress:addr,port:port,appID:appId,instanceID:instanceId,accessToken:"test",groupID:groupId }
 	go supervisorTcp.CreateSocket()
 	//fmt.Println(err)

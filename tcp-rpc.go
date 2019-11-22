@@ -32,34 +32,22 @@ func NewSupervisorTcp(ipAddress string, port string, supervisor *Supervisor) *Su
 	return &SupervisorTcp{supervisor: supervisor, port: port, ipAddress: ipAddress}
 }
 
-// CreateSocket create tcp socker
-func (st *SupervisorTcp) CreateSocket() error {
-	//var err error
-	if st.port == "" {
-		st.port = "50001"
-	}
-
-	tcpArress := st.ipAddress + ":" + st.port
-	tcpAdd, err := net.ResolveTCPAddr("tcp", tcpArress)
+func connectServer(st *SupervisorTcp, done chan int)(*net.TCPConn,error)  {
+	tcpAddress:=st.getAddress()
+	tcpAdd, err := net.ResolveTCPAddr("tcp", tcpAddress)
 	if err != nil {
 		fmt.Println("net.ResolveTCPAddr error:", err)
-		return err
+		return nil,err
 	}
-
 	conn, err := net.DialTCP("tcp", nil, tcpAdd) //raddr是指远程地址，laddr是指本地地址，连接服务端
 	if err != nil {
 		fmt.Println("net.DailTCP error:", err)
-		return err
+		return nil,err
 	}
-	defer conn.Close()
 	fmt.Println("connected")
 	readTimeout := 30 * time.Second
 	conn.SetKeepAlive(true)
 	conn.SetKeepAlivePeriod(readTimeout)
-	c := make(chan int)
-	t1 := time.NewTicker(time.Second * 10)
-	go onMessageReceived(conn, st, c, t1) //读取服务端广播的信息
-	go sendHeartBeat(conn, c, t1)
 	instanceLoginReq := &message.InstanceLoginReq{InstanceID: st.instanceID, AppId: st.appID, GroupID: st.groupID, AccessToken: st.accessToken}
 	sendData, err := proto.Marshal(instanceLoginReq)
 	var b bytes.Buffer
@@ -68,10 +56,29 @@ func (st *SupervisorTcp) CreateSocket() error {
 	messageBuffer := packMessage(b.Bytes(), 3, sendData)
 	_, err = conn.Write(messageBuffer)
 	if err != nil {
-		c <- 1
-		<-c
+		done <- 1
+		<-done
 		fmt.Println(err)
 	}
+	return conn,nil
+}
+func (st *SupervisorTcp) getAddress()string{
+	if st.port == "" {
+		st.port = "50001"
+	}
+
+	tcpAddress := st.ipAddress + ":" + st.port
+	return tcpAddress
+}
+// CreateSocket create tcp socker
+func (st *SupervisorTcp) CreateSocket() error {
+
+	c := make(chan int)
+	conn,err := connectServer(st,c)
+	defer conn.Close()
+	t1 := time.NewTicker(time.Second * 10)
+	go onMessageReceived(conn, st, c, t1) //读取服务端广播的信息
+	go sendHeartBeat(conn, c, t1,st)
 	//st.conn = conn
 	//for {
 	//	// 自己发送的信息
@@ -99,7 +106,7 @@ func packMessage(messageVersionBuf []byte, messageID int32, sendData []byte) []b
 	return b.Bytes()
 }
 
-func sendHeartBeat(conn *net.TCPConn, done chan int, heartBeatTimer *time.Ticker) {
+func sendHeartBeat(conn *net.TCPConn, done chan int, heartBeatTimer *time.Ticker,st *SupervisorTcp) {
 	id := 0
 	//t1 := time.NewTimer(time.Second * 5)
 
@@ -130,6 +137,11 @@ func sendHeartBeat(conn *net.TCPConn, done chan int, heartBeatTimer *time.Ticker
 					_, err = conn.Write(messageBuffer)
 					if err != nil {
 						fmt.Println(err)
+						tcpConn,err := connectServer(st,done)
+						if err!=nil{
+							fmt.Println(err)
+						}
+						conn = tcpConn
 					}
 				}
 			default:
